@@ -1,6 +1,6 @@
 #coding:utf-8
-'''nvshenheji爬虫
-https://www.nvshenheji.com/'''
+'''zhoyanxi爬虫
+https://www.zhouyanxi.com/'''
 
 from urllib.request import urlopen,urlretrieve,Request
 from urllib import request
