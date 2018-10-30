@@ -32,36 +32,39 @@ headers = {}
 #request.install_opener(opener)
 
 
-#网页内容解析
+#网页内容解析返回lxml对象
 def pagparse(url,headers):	
 	req = Request(url,None,headers)
 	response = urlopen(req).read().decode("utf-8")
 	lxmlObj = etree.HTML(response)
 	time.sleep(1)
 	return lxmlObj
-#图片名称
+
+#图片名称处理
 def imgaltparse(lxmlObj):
 	#取连接尾部17个字符做为文件名，若含有/则去掉 
 	return [alt.strip()[-17:].replace('/','') for alt in lxmlObj.xpath("//div[@class='imglist']//a/@href")]
 
+#图片链接处理
 def imgurlparse(lxmlObj):
 	imgurllist = lxmlObj.xpath("//div[@class='imglist']//img/@src")
 	return [imgurl.strip() for imgurl in imgurllist]
 
+#一个主题的所有图片链接爬取
 def imgpagparse(pagurl,headers):
 	paglxmlObj = pagparse(pagurl,headers)
 	imgalts =  imgaltparse(paglxmlObj)
 	imgurls = imgurlparse(paglxmlObj)
-	paglist = paglxmlObj.xpath("//a[@class='num']/@href")
-	print("共有%d个分页面"%(len(paglist)+1))
-	for pagurl in paglist:
-		paglxmlObj = pagparse(pagurl,headers)
-		
+	NextimgPag = paglxmlObj.xpath('//a[@class="next"]/@href')
+	while NextimgPag:
+		paglxmlObj = pagparse(NextimgPag[0],headers)		
 		imgalts.extend(imgaltparse(paglxmlObj))
 		imgurls.extend(imgurlparse(paglxmlObj))
+		NextimgPag = paglxmlObj.xpath('//a[@class="next"]/@href')
 	print("发现%s张图片"%len(imgalts))
 	return zip(imgalts,imgurls)
 
+#创建文件夹
 def mk_dir(localpath,title):
 	dirpath = localpath+'/'+title
 	if not os.path.exists(dirpath):
@@ -71,7 +74,8 @@ def mk_dir(localpath,title):
 	else:
 		print(dirpath,"目录已存在")
 		return dirpath
-	
+
+#保存图片	
 def imgsave(imgitem,dirpath,headers):
 	imgNum = 1
 	for imgalt,imgurl in imgitem:
@@ -89,7 +93,8 @@ def imgsave(imgitem,dirpath,headers):
 			pass
 			#print(10*"\b",end="")
 			#urlretrieve(imgurl,dirpath+'/'+imgalt,callbackinfo)
-		
+
+#下载图片		
 def imgparse(imgurl,headers):
 	maxTryNum = 5
 	for tries in range(maxTryNum):
@@ -160,3 +165,4 @@ if __name__ == '__main__':
 		else:
 			print("parse Error")
 			os._exit(1)
+	 
