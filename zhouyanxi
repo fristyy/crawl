@@ -1,0 +1,162 @@
+#coding:utf-8
+'''nvshenheji爬虫
+https://www.nvshenheji.com/'''
+
+from urllib.request import urlopen,urlretrieve,Request
+from urllib import request
+from lxml import etree
+import os,time
+
+
+#请求头
+headers = {}
+#headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+           #'Accept-Encoding': 'gzip, deflate',
+               #'Accept-Language': 'zh-CN,zh;q=0.9',
+               #'Cache-Control': 'max-age=0',
+               #'Connection': 'keep-alive',
+               #'Host': 'www.zhouyanxi.com',
+               #'If-Modified-Since': 'Wed, 24 Oct 2018 10:10:53 GMT',
+               #'If-None-Match': "8074a1d8816bd41:0",
+               #'Upgrade-Insecure-Requests': '1',
+               #'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'
+               #}
+
+## The proxy address and port:
+#proxy_info = { 'host' : 'web-proxy.oa.com','port' : 8080 }
+## We create a handler for the proxy
+#proxy_support = request.ProxyHandler({"http" : "http://%(host)s:%(port)d" % proxy_info})
+## We create an opener which uses this handler:
+#opener = request.build_opener(proxy_support)
+## Then we install this opener as the default opener for urllib2:
+#request.install_opener(opener)
+
+
+#网页内容解析
+def pagparse(url,headers):	
+	req = Request(url,None,headers)
+	response = urlopen(req).read().decode("utf-8")
+	lxmlObj = etree.HTML(response)
+	time.sleep(1)
+	return lxmlObj
+#图片名称
+def imgaltparse(lxmlObj):
+	#取连接尾部17个字符做为文件名，若含有/则去掉 
+	return [alt.strip()[-17:].replace('/','') for alt in lxmlObj.xpath("//div[@class='imglist']//a/@href")]
+
+def imgurlparse(lxmlObj):
+	imgurllist = lxmlObj.xpath("//div[@class='imglist']//img/@src")
+	return [imgurl.strip() for imgurl in imgurllist]
+
+def imgpagparse(pagurl,headers):
+	paglxmlObj = pagparse(pagurl,headers)
+	imgalts =  imgaltparse(paglxmlObj)
+	imgurls = imgurlparse(paglxmlObj)
+	paglist = paglxmlObj.xpath("//a[@class='num']/@href")
+	print("共有%d个分页面"%(len(paglist)+1))
+	for pagurl in paglist:
+		paglxmlObj = pagparse(pagurl,headers)
+		
+		imgalts.extend(imgaltparse(paglxmlObj))
+		imgurls.extend(imgurlparse(paglxmlObj))
+	print("发现%s张图片"%len(imgalts))
+	return zip(imgalts,imgurls)
+
+def mk_dir(localpath,title):
+	dirpath = localpath+'/'+title
+	if not os.path.exists(dirpath):
+		os.makedirs(dirpath)
+		print(dirpath,"创建成功")
+		return dirpath
+	else:
+		print(dirpath,"目录已存在")
+		return dirpath
+	
+def imgsave(imgitem,dirpath,headers):
+	imgNum = 1
+	for imgalt,imgurl in imgitem:
+		print("开始连接图片",end="\t")
+		img = imgparse(imgurl,headers)
+		if img != False:
+			imgpath = dirpath+'/'+imgalt
+			print("开始下载第{}张图片,url='{}'".format(imgNum,imgurl))
+			with open(imgpath,'wb') as f:
+				f.write(img)
+				f.flush()
+			imgNum += 1
+			time.sleep(0.5)
+		else:
+			pass
+			#print(10*"\b",end="")
+			#urlretrieve(imgurl,dirpath+'/'+imgalt,callbackinfo)
+		
+def imgparse(imgurl,headers):
+	maxTryNum = 5
+	for tries in range(maxTryNum):
+		try:
+			print("图片url:%s"%imgurl)
+			req = Request(imgurl,None,headers)
+			img = urlopen(req).read()
+			return img
+		except Exception as e:
+			if tries < (maxTryNum-1):
+				print(e)
+				time.sleep(3)  
+				continue
+	print("图片连接下载超时!")
+	return False
+
+	
+def callbackinfo(down,block,size):
+	'''
+	回调函数：
+	down：已经下载的数据块
+	block：数据块的大小
+	size：远程文件的大小
+	'''
+	per=100.0*(down*block)/size
+	if per>100:
+		per=100
+	print('%d%%%0.2f'%(per,size),end="")	
+	print((len(str(per))+6)*'\b',end="")
+
+if __name__ == '__main__':
+	#主页解析
+	lxmlObj = pagparse("http://www.zhouyanxi.com",headers)
+	urllist = lxmlObj.xpath("//div[@class='indexprint']//a/@href")
+	titlelist = lxmlObj.xpath("//div[@class='indexprint']//a/@title")
+	zhoulist = list(zip(urllist,titlelist))
+	#for url,title in zhoulist:
+		#print('title:{}\turl:{}\n'.format(title,url))
+	
+	#本地存放地址
+	localpath = "E:/scrapy/zhouyanxi"
+	
+	#图片内容存储
+	for pagurl,title in zhoulist[11:]:
+		maxTryNum = 5
+		print('start try save:%s'%title)
+		print('start parse:%s'%pagurl)
+		for tries in range(maxTryNum):
+			try:
+				imglist = list(imgpagparse(pagurl,headers))
+				break
+			except Exception as e:
+				print(e)
+				if tries <(maxTryNum-1):
+					print("尝试再次连接网页")
+					continue	
+				else:
+					print("连接失败!")
+					os._exit(0)
+		time.sleep(2)
+		if imglist:
+			try:
+				dirpath = mk_dir(localpath,title)
+				imgsave(imglist,dirpath,headers)
+			except Exception as e:
+				print(e)
+				os._exit(0)	
+		else:
+			print("parse Error")
+			os._exit(1)
