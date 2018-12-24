@@ -2,13 +2,10 @@
 '''nvshenheji爬虫 asyncio异步版本,python3.7
 https://www.nvshenheji.com/'''
 
-from urllib.request import urlopen,urlretrieve,Request
 from urllib import request
 import os,sys,time
-from concurrent import futures
 
 from lxml import etree
-from lelo import parallel
 import aiohttp,asyncio
 from bs4 import BeautifulSoup
 
@@ -155,7 +152,7 @@ async def imgsave(imgurl,imgalt,dirpath,session):
 			f.flush()
 		return imgalt
 
-#异步下载图片,子生成器
+#异步下载图片
 async def imgdowload(imgurl,session,headers=headers):
 	maxTryNum = 3
 	for tries in range(maxTryNum):
