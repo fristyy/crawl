@@ -1,0 +1,31 @@
+
+import requests
+from bs4 import BeautifulSoup 
+
+proxyWeburl = 'http://www.data5u.com/'
+
+def ip_get(url):
+    r = requests.get(proxyWeburl,headers=headers)
+    bsobj = BeautifulSoup(r.text)
+    serverlist = []
+    for con in  bsobj.find_all('div','wlist')[1].find_all('span')[11:]:
+        if con.find('li'):
+            serverlist.append(con.find('li').text)
+    iplist = []        
+    for i in range(len(serverlist)):
+        if i%9 == 0:
+            iplist.append((serverlist[i],serverlist[i+1]))
+    print(iplist)
+    return iplist
+
+def ip_test(iplist):
+    for server,port in ip_list:
+        proxies = {'http://':'http://' + server +':' + port, 'https':'https://' + server +':' + port}
+        try:
+            r = requests.get(target_url1, proxies = proxies,headers=headers, timeout = 10)
+            if r.status_code == 200:
+                print(server,':request sucesses')
+            else:
+                print(server+':'+r.status_code)
+        except:
+            print(server,':bad proxy')
