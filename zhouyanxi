@@ -16,20 +16,9 @@ headers = {}
                #'Cache-Control': 'max-age=0',
                #'Connection': 'keep-alive',
                #'Host': 'www.zhouyanxi.com',
-               #'If-Modified-Since': 'Wed, 24 Oct 2018 10:10:53 GMT',
-               #'If-None-Match': "8074a1d8816bd41:0",
                #'Upgrade-Insecure-Requests': '1',
                #'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'
                #}
-
-## The proxy address and port:
-#proxy_info = { 'host' : 'web-proxy.oa.com','port' : 8080 }
-## We create a handler for the proxy
-#proxy_support = request.ProxyHandler({"http" : "http://%(host)s:%(port)d" % proxy_info})
-## We create an opener which uses this handler:
-#opener = request.build_opener(proxy_support)
-## Then we install this opener as the default opener for urllib2:
-#request.install_opener(opener)
 
 
 #网页内容解析返回lxml对象
@@ -111,7 +100,7 @@ def imgparse(imgurl,headers):
 	print("图片连接下载超时!")
 	return False
 
-	
+#下载进度，未用上。。。
 def callbackinfo(down,block,size):
 	'''
 	回调函数：
