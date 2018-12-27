@@ -4,19 +4,25 @@ from bs4 import BeautifulSoup
 
 proxyWeburl = 'http://www.data5u.com/'
 
+#端口破解,此网站浏览器显示端口与爬虫所取数据不一致，port后class属性字母串为端口的数据源。
+#方法从简书https://www.jianshu.com/p/6d0f792da16a获取
+#https://www.jianshu.com/u/vzFxb5,感谢'chaoswong'
+def decrypt(src):
+	s = 'ABCDEFGHIZ'
+	dst = ''
+	for c in src:
+		dst += str(s.find(c))
+	dst = int(dst) >> 3
+	return dst
+
 def ip_get(url):
-    r = requests.get(proxyWeburl,headers=headers)
-    bsobj = BeautifulSoup(r.text)
-    serverlist = []
-    for con in  bsobj.find_all('div','wlist')[1].find_all('span')[11:]:
-        if con.find('li'):
-            serverlist.append(con.find('li').text)
-    iplist = []        
-    for i in range(len(serverlist)):
-        if i%9 == 0:
-            iplist.append((serverlist[i],serverlist[i+1]))
-    print(iplist)
-    return iplist
+	ip_list =[]
+	r = requests.get(proxyWeburl,headers=headers)
+	bsobj = BeautifulSoup(r.text)
+	for tag in bsobj.find_all('ul','l2'):
+		ip_list.append((tag.li.string,decrypt(tag.find_all("li", "port")[0]['class'][1])))
+	print(ip_list)
+	return ip_list
 
 def ip_test(iplist):
     for server,port in ip_list:
