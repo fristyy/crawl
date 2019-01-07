@@ -50,34 +50,6 @@ class proxyDT5:
 		for tag in bsobj.find_all('ul','l2'):
 			self.ip_list.append((tag.li.string,self._decrypt(tag.find_all("li", "port")[0]['class'][1])))
 		print(self.ip_list)
-	    
-	def test(self):
-	#requests库方法
-		for proxy,pro_port in self.iplist:
-			print(proxy,':',pro_port)
-		
-			proxy = {'http':'http://'+proxy+':'+ str(pro_port),'https':'https://'+proxy+':'+str(pro_port)}
-			try:
-				r = requests.get(baseurl, proxies = proxy, headers = headers, timeout= 20)
-				print(r.status_code)
-			except Exception as e:
-				print(e)
-		
-		print('urllib方法')		
-		for proxy,port in self.iplist:
-			print(proxy,':',port)
-			httpproxy_handler = urllib.request.ProxyHandler({"http":proxy+':'+str(port),"https":proxy+':'+str(port)})
-			opener = urllib.request.build_opener(httpproxy_handler)
-			req = urllib.request.Request(baseurl,headers=headers)
-			try:
-				htmlcontent = opener.open(url,timeout=20)
-				htmlcontent = htmlcontent.read()
-				if (len(htmlcontent))==227:
-					print(htmlcontent)
-				else:
-					print(len(htmlcontent))
-			except Exception as e:
-				print(e)
 				
 				
 	async def aio_handler(self, proxy, session):
@@ -87,9 +59,9 @@ class proxyDT5:
 				pagcontent = await req.read()
 				print(f'{proxy}useable,content{len(pagcontent)}')
 			return proxy
-		except Exception as e:
-			print(e)
-			print(f"bad proxy{proxy}")
+		except:
+			continue
+			
 				
 	async def aio_test(self):
 		conn = aiohttp.TCPConnector(limit=10)
