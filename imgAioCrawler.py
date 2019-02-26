@@ -6,6 +6,7 @@ from urllib.request import urlopen
 from urllib import request,error
 import os,sys,time,socket
 import random
+from tqdm import tqdm
 
 from lxml import etree
 import aiohttp,asyncio
