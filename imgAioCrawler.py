@@ -248,7 +248,7 @@ def mainpageparse(baseurl):
 	return conlist 
 
 #自动检索首页推荐栏全部主题，并判断是否已下载过。	
-async def main(startpag,endpage,mainurl,localpath):	
+async def main(startpag=0,endpage=None,mainurl=baseurl,localpath=localpath):	
 	conlist = mainpageparse(mainurl)
 	print(f'当前主页展示全部主题{len(conlist)}')
 	for theme in conlist:
@@ -299,6 +299,6 @@ async def subTheme(themeurl,title):
 
 if __name__ == '__main__':
 	#启动主页下载
-	#asyncio.run(main(0,None,baseurl,localpath))	
+	#asyncio.run(main())	
 	#启动单独下载
 	asyncio.run(subTheme('https://www.nvshenheji.com/Candy/linmeihuizi_ef89683e.html','[Candy糖果画报]Vol.046_嫩模林美惠子Mieko沙巴旅拍蓝色紧身泳衣完美曲线写真51P'))
