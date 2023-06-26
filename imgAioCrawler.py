@@ -21,12 +21,6 @@ localpath = "E:/scrapy/nvshenheji"
 pglist_lxml ='//div[@class="nr"]/table[4]//div[@class="page"]/a/@href'
 imglist_lxml = "//div[@class='img']//img/@src"
 
-baseurl = "https://www.nvshenheji.com"
-localpath = "E:/scrapy/nvshenheji"	
-
-pglist_lxml ='//div[@class="nr"]/table[4]//div[@class="page"]/a/@href'
-imglist_lxml = "//div[@class='img']//img/@src"
-
 Falseimg = []  #下载未成功的图片url收集
 
 headers = {#'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
@@ -59,7 +53,7 @@ def proxy_supporter(proxy_list,url):
 		opener = request.build_opener(proxy_support)
 		maxTryNum = 2
 		for tries in range(maxTryNum):			
-			req = Request(url,headers=headers)
+			req = request(url,headers=headers)
 			try:
 				print(f"使用代理{proxy}获得数据")
 				htmlcontent = opener.open(req,timeout=20)
@@ -84,7 +78,7 @@ def pagparser(url,headers=headers):
 	except socket.timeout:
 		try:
 			print('尝试直接获取数据')
-			req = Request(url,headers=headers)
+			req = request(url,headers=headers)
 			htmlcontent = urlopen(req).read()
 			return htmlcontent
 		except error.URLError:
