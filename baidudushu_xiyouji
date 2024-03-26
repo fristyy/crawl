@@ -1,0 +1,68 @@
+import asyncio
+import aiohttp
+import requests
+from  tqdm import tqdm
+
+
+url = r'https://dushu.baidu.com/api/pc/getCatalog?data={%22book_id%22:%224306063500%22}'
+
+headers = {
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    'Accept-Language': 'zh-CN,zh;q=0.9',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    # 'Cookie': 'BIDUPSID=8FAA5A767C73131B9B49858E68B36B3E; PSTM=1615908856; MCITY=-158%3A; BDUSS=QtMmllYVBjODhOT0k3VU5pYUs2S3VkZURwSkNqRDF6bFpxN2lyWk1kZWhjeGRtSVFBQUFBJCQAAAAAAAAAAAEAAADYIOIGZnJpc3R5eQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKHm72Wh5u9lcm; BAIDUID=39454063BAF32210C15ECFE1DAE2819A:FG=1; BDUSS_BFESS=QtMmllYVBjODhOT0k3VU5pYUs2S3VkZURwSkNqRDF6bFpxN2lyWk1kZWhjeGRtSVFBQUFBJCQAAAAAAAAAAAEAAADYIOIGZnJpc3R5eQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKHm72Wh5u9lcm; H_PS_PSSID=40079_40364_40351_40304_40369_40376_40416_40467_40317_39661_40505_40511_40512_40398; H_WISE_SIDS=40079_40364_40351_40304_40369_40376_40416_40467_40317_39661_40505_40511_40512_40398; H_WISE_SIDS_BFESS=40079_40364_40351_40304_40369_40376_40416_40467_40317_39661_40505_40511_40512_40398; BDRCVFR[feWj1Vr5u3D]=I67x6TjHwwYf0; delPer=0; PSINO=3; BAIDUID_BFESS=39454063BAF32210C15ECFE1DAE2819A:FG=1; BA_HECTOR=00ak8k8185al8021a48l210guvjbku1j04g4f1s; ZFY=mdq70y10sy:BiP7vPyLx8m5f9eWpr:BgAvmhTR1:BKBHIM:C; BDORZ=B490B5EBF6F3CD402E515D22BCDA1598; ab_sr=1.0.1_Y2FkNGUzOTQ4N2Y2YzM3YTAzYzVlY2IyYmY0YjdkN2ZhMGRjZWNmODhmMDY5N2YyNTUwYjBjMjg3NzBiYTg1MTZhOGMzNjY1MzFlOTkzYzE0NGRiYjc2ZDhkMzYyNTcwNDVmNDhkOTgzYWEwOWFkNzBlMmI1M2IxODg4OTM3MGVjMWM0NzA1ZTdhNjgzZTM2NDdkY2Y1YThlMWE3MTgyOQ==; RT="z=1&dm=baidu.com&si=cwy3w0fgeco&ss=lu85ntxr&sl=2&tt=qw&bcn=https%3A%2F%2Ffclog.baidu.com%2Flog%2Fweirwood%3Ftype%3Dperf&ld=p28"; Hm_lvt_bf1e478a71b02a743ab42bcfed9d1ff1=1711444669; Hm_lpvt_bf1e478a71b02a743ab42bcfed9d1ff1=1711447158',
+    'Pragma': 'no-cache',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-User': '?1',
+    'Upgrade-Insecure-Requests': '1',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+    'sec-ch-ua': '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"Windows"',
+}
+
+response = requests.get(
+    url,
+    headers=headers,
+)
+
+#cpts = [(title['title'],title['cid'],id_+1) for title in response.json()['data']["novel"]["items"] for id_ in range(len(response.json()['data']["novel"]["items"]))]
+cpts = []
+id_ = 0
+for title in response.json()['data']["novel"]["items"]:
+    id_ += 1
+    cpts.append((title['title'],title['cid'],id_ ))
+
+# response = requests.get(
+#     c_url,
+#     headers=headers,
+# )
+#content = response.json()['data']["novel"]["content"]
+c_url = r'https://dushu.baidu.com/api/pc/getChapterContent?data={{%22book_id%22:%224306063500%22,%22cid%22:%224306063500|{0}%22,%22need_bookinfo%22:0}}'
+
+async def fetch(cpt,session,pbar):
+    async with session.get(c_url.format(cpt[1]),timeout=20) as response:
+        with open(f'D:/python/othersample/西游记/{cpt[2]}{cpt[0]}'+'.txt','w',encoding='utf8') as f:
+            f.write(await response.text())
+            pbar.update(1)
+
+async def main():
+    with tqdm(total=len(cpts),ncols=70) as pbar:
+    # 设置连接池的最大连接数
+        connector = aiohttp.TCPConnector(limit=10)  # 设置为10个并发连接
+        async with aiohttp.ClientSession(connector=connector) as session:
+                # 创建任务列表
+            tasks = [fetch(cpt,session,pbar) for cpt in cpts]
+            # 并发执行任务
+            #responses = await asyncio.gather(*tasks)
+            await asyncio.gather(*tasks)
+            # 处理响应结果
+            # for url, response in zip(urls, responses):
+            #     print(f'Response from {url}: {response}')
+
+# 运行异步函数
+asyncio.run(main())
+            
