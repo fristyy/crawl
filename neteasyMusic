@@ -1,0 +1,57 @@
+import json
+import base64
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes    #获取随机字节串
+from Crypto.Util.Padding import pad, unpad    #填充和反填充
+
+url = 'https://music.163.com/weapi/comment/resource/comments/get'
+
+#加密方法
+def entrance(data):
+    e= '010001'
+    g = "0CoJUm6Qyw8W8jud"
+    i = 'YD1qBOSGRClhOpaI'
+    encText1 = b(data,g)
+    encText = b(encText1,i)
+    encSecKey = '...'  #浏览器中获取
+    return encSecKey,encText
+
+def b(data,key): 
+    c = key.encode('utf-8')
+    d = "0102030405060708".encode('utf-8')
+    f  = AES.new(key=c, iv=d, mode=AES.MODE_CBC)
+    print(data)
+    padded_text = pad(data.encode('utf-8'),16)
+    p = f.encrypt(padded_text)
+    return str(base64.b64encode(p),'utf8')
+
+# data = {
+# "rid":"R_SO_4_2138439049",
+# "threadId":"R_SO_4_2138439049",
+# "pageNo":"3",
+# "pageSize":"20",
+# "cursor":"1711346706638",
+# "offset":"0",
+# "orderType":"1",
+# "csrf_token":""
+# }
+# print(json.dumps(data).replace(' ',''))
+#print(entrance(json.dumps(data).replace(' ',''))[1])
+
+    
+id_ = 2138439049
+pagNo = 1
+cursor = -1
+offset = 0
+data = {
+    "rid": f"R_SO_4_{id_}",
+    "threadId": f"R_SO_4_{id_}",
+    "pageNo": str(pagNo),
+    "pageSize": "20",
+    "cursor": str(cursor),  #翻页要变更此参数,从第一次获取的数据中获得
+    "offset": str(offset),
+    "orderType": "1",   
+    "csrf_token": ""
+}
+data = json.dumps(data).replace(' ','')
+print(entrance(data))
