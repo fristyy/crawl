@@ -1,4 +1,5 @@
 import asyncio
+import aiofiles
 import aiohttp
 import requests
 from  tqdm import tqdm
@@ -45,8 +46,9 @@ c_url = r'https://dushu.baidu.com/api/pc/getChapterContent?data={{%22book_id%22:
 
 async def fetch(cpt,session,pbar):
     async with session.get(c_url.format(cpt[1]),timeout=20) as response:
-        with open(f'D:/python/othersample/西游记/{cpt[2]}{cpt[0]}'+'.txt','w',encoding='utf8') as f:
-            f.write(await response.text())
+        json_ = await response.json()
+        async  with aiofiles.open(f'D:/python/othersample/西游记/{cpt[2]}{cpt[0]}'+'.txt','w',encoding='utf8') as f:
+            await f.write(json_["data"]['novel']['content'])
             pbar.update(1)
 
 async def main():
